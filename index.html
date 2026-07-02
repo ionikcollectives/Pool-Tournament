@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Lone Star Open Championship 2026 — Texas Billiard Club</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0C10;
+    --ink-2:#12161C;
+    --ink-3:#181D25;
+    --felt:#0D3B29;
+    --felt-2:#082A1D;
+    --felt-light:#134f37;
+    --navy:#16264A;
+    --navy-light:#233a6e;
+    --gold:#D2A43C;
+    --gold-bright:#EFC868;
+    --red:#A32C33;
+    --red-bright:#C9414A;
+    --chalk:#F4F0E4;
+    --chalk-dim:#CBC7BA;
+    --muted:#8B93A6;
+    --hair:rgba(212,169,58,0.22);
+    --display: 'Anton', sans-serif;
+    --eyebrow: 'Oswald', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--chalk);
+    font-family:var(--body);
+    overflow-x:hidden;
+    scroll-snap-type:y proximity;
+    height:100vh;
+    overflow-y:auto;
+  }
+  ::selection{ background:var(--gold); color:var(--ink); }
+
+  /* ---------- noise / chalk-dust texture ---------- */
+  .grain{
+    position:fixed; inset:0; z-index:5; pointer-events:none;
+    opacity:0.05; mix-blend-mode:overlay;
+  }
+
+  /* ---------- cushion stripe (Texas flag rail) ---------- */
+  .cushion{
+    height:7px; width:100%; display:flex; flex-shrink:0;
+    box-shadow:0 1px 0 rgba(212,169,58,0.5), 0 -1px 0 rgba(212,169,58,0.5);
+  }
+  .cushion span{flex:1; height:100%;}
+  .cushion span:nth-child(1){background:var(--navy-light);}
+  .cushion span:nth-child(2){background:var(--chalk);}
+  .cushion span:nth-child(3){background:var(--red);}
+
+  /* ---------- side nav : ball rack ---------- */
+  .railnav{
+    position:fixed; left:18px; top:50%; transform:translateY(-50%);
+    z-index:50; display:flex; flex-direction:column; gap:10px;
+    padding:14px 10px; background:rgba(10,12,16,0.55);
+    border:1px solid var(--hair); border-radius:40px;
+    backdrop-filter:blur(8px);
+  }
+  .railnav a{
+    width:30px; height:30px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:700; font-size:11px;
+    color:var(--ink); text-decoration:none; position:relative;
+    background:linear-gradient(145deg,#e9e2cf,#c9c0a2);
+    border:1.5px solid rgba(0,0,0,0.25);
+    transition:transform .25s ease, box-shadow .25s ease;
+    opacity:0.55;
+  }
+  .railnav a::after{
+    content:''; position:absolute; inset:2px; border-radius:50%;
+    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.55), transparent 55%);
+  }
+  .railnav a[data-ball="1"]{background:linear-gradient(145deg,#EFC868,#B8862A);color:#241a04;}
+  .railnav a[data-ball="2"]{background:linear-gradient(145deg,#3a5ab0,#16264A);color:#eef0f7;}
+  .railnav a[data-ball="3"]{background:linear-gradient(145deg,#d95a5f,#8f1f26);color:#fdf0ee;}
+  .railnav a[data-ball="4"]{background:linear-gradient(145deg,#7c5fc4,#442e86);color:#f2eefc;}
+  .railnav a[data-ball="5"]{background:linear-gradient(145deg,#e2903d,#a35a10);color:#2a1502;}
+  .railnav a[data-ball="6"]{background:linear-gradient(145deg,#2f9463,#0d5636);color:#eafff3;}
+  .railnav a[data-ball="7"]{background:linear-gradient(145deg,#a3572f,#5c2c12);color:#fbeee4;}
+  .railnav a[data-ball="8"]{background:linear-gradient(145deg,#3a3a3a,#0b0b0b);color:#f4f0e4;}
+  .railnav a[data-ball="9"]{background:linear-gradient(145deg,#EFC868 42%,#f4f0e4 43% 57%,#EFC868 58%);color:#241a04;}
+  .railnav a[data-ball="10"]{background:linear-gradient(145deg,#3a5ab0 42%,#f4f0e4 43% 57%,#3a5ab0 58%);color:#16264A;}
+  .railnav a[data-ball="11"]{background:linear-gradient(145deg,#d95a5f 42%,#f4f0e4 43% 57%,#d95a5f 58%);color:#7a1319;}
+  .railnav a[data-ball="12"]{background:linear-gradient(145deg,#2f9463 42%,#f4f0e4 43% 57%,#2f9463 58%);color:#0d5636;}
+  .railnav a[data-ball="13"]{background:linear-gradient(145deg,#a3572f 42%,#f4f0e4 43% 57%,#a3572f 58%);color:#5c2c12;}
+  .railnav a.active{ opacity:1; transform:scale(1.28); box-shadow:0 0 0 2px var(--gold-bright), 0 0 18px rgba(239,200,104,0.55); }
+  .railnav a span.tip{
+    position:absolute; left:42px; top:50%; transform:translateY(-50%);
+    white-space:nowrap; font-family:var(--eyebrow); font-size:11px;
+    letter-spacing:0.14em; text-transform:uppercase; color:var(--chalk);
+    background:rgba(10,12,16,0.9); padding:6px 10px; border-radius:4px;
+    border:1px solid var(--hair);
+    opacity:0; pointer-events:none; transition:opacity .2s ease;
+  }
+  .railnav a:hover span.tip{opacity:1;}
+
+  /* progress rail */
+  .progress-track{
+    position:fixed; right:18px; top:50%; transform:translateY(-50%);
+    z-index:50; width:2px; height:220px; background:rgba(212,169,58,0.18);
+  }
+  .progress-fill{
+    position:absolute; left:0; top:0; width:100%; height:0%;
+    background:linear-gradient(180deg,var(--gold-bright),var(--red));
+    transition:height .2s ease;
+  }
+
+  /* ---------- section shell ---------- */
+  section{
+    min-height:100vh; width:100%;
+    scroll-snap-align:start;
+    display:flex; flex-direction:column;
+    position:relative;
+    padding:64px clamp(24px,7vw,96px) 56px;
+    border-bottom:1px solid rgba(255,255,255,0.03);
+  }
+  section > .content{ flex:1; display:flex; flex-direction:column; justify-content:center; max-width:1280px; margin:0 auto; width:100%; }
+  .eyebrow{
+    font-family:var(--eyebrow); text-transform:uppercase; letter-spacing:0.32em;
+    font-size:12.5px; color:var(--gold-bright); display:flex; align-items:center; gap:12px; margin-bottom:18px;
+  }
+  .eyebrow::before{ content:''; width:26px; height:1px; background:var(--gold-bright); }
+  h1.slide-title{
+    font-family:var(--display); font-weight:400; text-transform:uppercase;
+    font-size:clamp(34px,5vw,64px); line-height:1.02; letter-spacing:0.01em;
+    color:var(--chalk); margin-bottom:8px;
+  }
+  .slide-title em{ font-style:normal; color:var(--gold-bright); }
+  .subhead{ font-family:var(--body); color:var(--muted); font-size:16px; max-width:640px; margin-bottom:34px; line-height:1.55; }
+
+  /* ---------- hero ---------- */
+  #hero{ padding-top:0; padding-bottom:0; justify-content:center; align-items:center; text-align:center; background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(13,59,41,0.55), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 85% 100%, rgba(163,44,51,0.18), transparent 60%),
+      var(--ink);
+  }
+  #hero .content{ align-items:center; }
+  .crest{ width:210px; height:auto; margin-bottom:22px; filter:drop-shadow(0 8px 30px rgba(212,169,58,0.25)); }
+  .hero-eyebrow{ font-family:var(--eyebrow); letter-spacing:0.5em; font-size:13px; color:var(--gold-bright); text-transform:uppercase; margin-bottom:18px; }
+  h1.hero-title{
+    font-family:var(--display); font-weight:400; text-transform:uppercase; color:var(--chalk);
+    font-size:clamp(52px, 11vw, 128px); line-height:0.92; letter-spacing:0.01em;
+  }
+  h1.hero-title .star{ color:var(--gold-bright); }
+  h1.hero-title .champ{
+    display:block; font-size:clamp(20px,3.4vw,34px); letter-spacing:0.22em; color:var(--red-bright);
+    margin-top:14px; font-family:var(--eyebrow); font-weight:600;
+  }
+  .hero-tagline{ font-family:var(--eyebrow); font-weight:600; letter-spacing:0.4em; font-size:14px; color:var(--red-bright); text-transform:uppercase; margin-top:16px; }
+  .hero-sub{ font-family:var(--body); color:var(--chalk-dim); font-size:16px; margin:18px 0 40px; max-width:520px; }
+  .facts{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-bottom:44px; }
+  .fact-chip{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:14px 26px; border:1px solid var(--hair); border-radius:10px;
+    background:rgba(18,22,28,0.6); backdrop-filter:blur(4px); min-width:120px;
+  }
+  .fact-chip b{ font-family:var(--mono); font-size:22px; color:var(--gold-bright); }
+  .fact-chip span{ font-family:var(--eyebrow); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); }
+  .scrollcue{ font-family:var(--eyebrow); font-size:11px; letter-spacing:0.3em; text-transform:uppercase; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:8px; animation:bob 2.2s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(8px);} }
+  .scrollcue .stick{ width:1px; height:34px; background:linear-gradient(var(--gold-bright), transparent); }
+
+  /* ---------- generic panels ---------- */
+  .panel{
+    background:linear-gradient(180deg, var(--ink-3), var(--ink-2));
+    border:1px solid var(--hair); border-radius:14px; padding:26px 28px;
+  }
+  .felt-panel{
+    background:linear-gradient(165deg, var(--felt), var(--felt-2));
+    border:1px solid rgba(212,169,58,0.35); border-radius:14px; padding:26px 28px;
+    position:relative; overflow:hidden;
+  }
+  .felt-panel::before{
+    content:''; position:absolute; inset:0; opacity:0.06; pointer-events:none;
+    background-image:radial-gradient(circle at 20% 30%, #fff 0 1px, transparent 1.5px);
+    background-size:22px 22px;
+  }
+  .panel-label{ font-family:var(--eyebrow); font-size:11.5px; letter-spacing:0.18em; text-transform:uppercase; color:var(--gold-bright); margin-bottom:14px; display:flex; align-items:center; gap:8px;}
+  .panel-label .dot{width:6px;height:6px;border-radius:50%;background:var(--gold-bright);}
+
+  /* lists */
+  ul.clean{ list-style:none; display:flex; flex-direction:column; gap:12px; }
+  ul.clean li{ font-size:15px; line-height:1.55; color:var(--chalk-dim); padding-left:22px; position:relative; }
+  ul.clean li::before{ content:'●'; position:absolute; left:0; top:2px; font-size:8px; color:var(--gold-bright); }
+  ul.clean.red li::before{ color:var(--gold-bright); }
+
+  /* data table generic */
+  table.spec{ width:100%; border-collapse:collapse; }
+  table.spec tr{ border-bottom:1px solid rgba(255,255,255,0.06); }
+  table.spec tr:last-child{ border-bottom:none; }
+  table.spec td{ padding:11px 4px; font-size:14.5px; }
+  table.spec td:first-child{ color:var(--muted); font-family:var(--eyebrow); letter-spacing:0.04em; width:38%; }
+  table.spec td:last-child{ color:var(--chalk); font-weight:500; text-align:right; font-family:var(--mono); font-size:13.5px; }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+
+  /* stat number */
+  .bignum{ font-family:var(--display); font-size:clamp(40px,5vw,58px); color:var(--gold-bright); line-height:1; }
+  .bignum small{ display:block; font-family:var(--eyebrow); font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); margin-top:8px; }
+
+  footer.pagefoot{ display:flex; justify-content:space-between; align-items:center; margin-top:38px; font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:0.05em; }
+  footer.pagefoot .idx{ color:var(--gold-bright); }
+
+  @media (max-width:900px){
+    .grid2, .grid3{ grid-template-columns:1fr; }
+    .railnav{ display:none; }
+    .progress-track{ display:none; }
+    section{ padding:52px 20px 44px; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="grain" width="0" height="0"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></svg>
+<div class="grain" style="background:transparent;"><svg width="100%" height="100%"><rect width="100%" height="100%" filter="url(#noiseFilter)"/></svg></div>
+
+<nav class="railnav" id="railnav">
+  <a href="#s0" data-ball="1"><span class="tip">Hero</span>1</a>
+  <a href="#s1" data-ball="2"><span class="tip">Objectives</span>2</a>
+  <a href="#s2" data-ball="3"><span class="tip">Overview</span>3</a>
+  <a href="#s3" data-ball="4"><span class="tip">Brackets</span>4</a>
+  <a href="#s4" data-ball="5"><span class="tip">Fees & Prizes</span>5</a>
+  <a href="#s5" data-ball="6"><span class="tip">Income</span>6</a>
+  <a href="#s6" data-ball="7"><span class="tip">Budget</span>7</a>
+  <a href="#s7" data-ball="8"><span class="tip">Sponsorship</span>8</a>
+  <a href="#s8" data-ball="9"><span class="tip">Engagement</span>9</a>
+  <a href="#s9" data-ball="10"><span class="tip">Technology</span>10</a>
+  <a href="#s10" data-ball="11"><span class="tip">Schedule</span>11</a>
+  <a href="#s11" data-ball="12"><span class="tip">Outcomes</span>12</a>
+  <a href="#s12" data-ball="13"><span class="tip">Closing</span>13</a>
+</nav>
+<div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+<!-- ============ 0. HERO ============ -->
+<section id="s0">
+  <div class="content">
+    <img class="crest" src="Logo.png" alt="Texas Billiard Club Crest">
+    <div class="hero-eyebrow">Texas Billiard Club Presents</div>
+    <h1 class="hero-title">The Lone <span class="star">Star</span><br>Open<span class="champ">Championship 2026</span></h1>
+    <div class="hero-tagline">Break. Compete. Conquer.</div>
+    <p class="hero-sub">A 14-hour single-elimination showdown across Solo and Scotch Doubles play — built to put the parlour's name on every player's lips.</p>
+    <div class="facts">
+      <div class="fact-chip"><b>14 HRS</b><span>One-Day Event</span></div>
+      <div class="fact-chip"><b>03</b><span>Pool Tables</span></div>
+      <div class="fact-chip"><b>02</b><span>Categories</span></div>
+      <div class="fact-chip"><b>64</b><span>Max Participants</span></div>
+      <div class="fact-chip"><b>S.E.</b><span>Single Elimination</span></div>
+    </div>
+    <div class="scrollcue"><span>Scroll to Break</span><span class="stick"></span></div>
+  </div>
+  <div class="cushion"><span></span><span></span><span></span></div>
+</section>
+
+<!-- ============ 1. OBJECTIVES ============ -->
+<section id="s1">
+  <div class="content">
+    <div class="eyebrow">01 — Event Objectives</div>
+    <h1 class="slide-title">Why We're Racking<br><em>The Tables</em></h1>
+    <p class="subhead">Every bracket, voucher and social post is designed to serve two tiers of purpose for the parlour.</p>
+    <div class="grid2">
+      <div class="felt-panel">
+        <div class="panel-label"><span class="dot"></span>Primary Objectives</div>
+        <ul class="clean">
+          <li>Increase awareness and exposure of Texas Billiard Club.</li>
+          <li>Position the venue as one of the region's premier pool tournament destinations.</li>
+          <li>Attract new customers and encourage repeat visits.</li>
+          <li>Deliver a professionally managed tournament experience.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-label"><span class="dot" style="background:var(--gold-bright)"></span>Secondary Objectives</div>
+        <ul class="clean red">
+          <li>Generate social media exposure.</li>
+          <li>Build a competitive player community.</li>
+          <li>Collect customer information for future tournaments.</li>
+          <li>Increase food & beverage sales during the event.</li>
+          <li>Establish The Lone Star Open as a recurring annual tournament.</li>
+        </ul>
+      </div>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">02 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 2. OVERVIEW ============ -->
+<section id="s2">
+  <div class="content">
+    <div class="eyebrow">02 — Event Overview</div>
+    <h1 class="slide-title">The Lay of<br><em>The Table</em></h1>
+    <p class="subhead">Core event facts, at a glance, alongside the field size for both categories.</p>
+    <div class="grid2" style="align-items:start;">
+      <div class="panel">
+        <div class="panel-label"><span class="dot"></span>Event Details</div>
+        <table class="spec">
+          <tr><td>Event Name</td><td>The Lone Star Open Championship 2026</td></tr>
+          <tr><td>Organized By</td><td>Texas Billiard Club</td></tr>
+          <tr><td>Managed By</td><td>IONIK Events</td></tr>
+          <tr><td>Duration</td><td>14 Hours (One-Day Event)</td></tr>
+          <tr><td>Venue</td><td>Texas Billiard Club</td></tr>
+          <tr><td>Pool Tables</td><td>3 Professional Tables</td></tr>
+          <tr><td>Categories</td><td>Solo & Duo (Scotch Doubles)</td></tr>
+          <tr><td>Format</td><td>Single Elimination</td></tr>
+          <tr><td>Rules</td><td>WPA Standard Rules</td></tr>
+        </table>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:18px;">
+        <div class="felt-panel" style="display:flex; justify-content:space-around; text-align:center;">
+          <div class="bignum">32<small>Solo Players</small></div>
+          <div class="bignum">16<small>Duo Teams</small></div>
+        </div>
+        <div class="panel" style="text-align:center;">
+          <div class="bignum" style="color:var(--gold-bright); font-size:clamp(56px,7vw,84px);">64<small>Total Maximum Participants</small></div>
+        </div>
+      </div>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">03 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 3. TOURNAMENT STRUCTURE ============ -->
+<section id="s3">
+  <div class="content">
+    <div class="eyebrow">03 — Tournament Structure</div>
+    <h1 class="slide-title">Two Brackets,<br><em>One Grand Final</em></h1>
+    <p class="subhead">Solo runs a deeper field of 32; Duo pairs run Scotch Doubles from a field of 16 teams.</p>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-label"><span class="dot"></span>Solo (Singles) — 32 Players</div>
+        <svg class="bracket-svg" viewBox="0 0 320 566" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block; margin-top:4px;">
+          <defs>
+            <marker id="arrowS" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#D2A43C"/>
+            </marker>
+            <marker id="arrowS3" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#8B93A6"/>
+            </marker>
+          </defs>
+
+          <rect x="50" y="8" width="220" height="30" rx="15" fill="#0D3B29" stroke="#D2A43C" stroke-width="1.2"/>
+          <text x="160" y="27.5" text-anchor="middle" font-family="Oswald, sans-serif" font-size="10.5" letter-spacing="1" fill="#F4F0E4">32 REGISTERED PLAYERS</text>
+          <line x1="160" y1="38" x2="160" y2="51" stroke="#D2A43C" stroke-width="1.5" marker-end="url(#arrowS)"/>
+
+          <rect x="60" y="54" width="200" height="54" rx="8" fill="#181D25" stroke="#D2A43C" stroke-opacity="0.55" stroke-width="1.2"/>
+          <text x="160" y="76" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="13" fill="#F4F0E4">Round of 32</text>
+          <text x="160" y="94" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8B93A6">16 Matches · Race to 3</text>
+          <text x="204" y="127" font-family="'IBM Plex Mono', monospace" font-size="9.5" fill="#8B93A6">16 Winners</text>
+          <line x1="160" y1="108" x2="160" y2="147" stroke="#D2A43C" stroke-width="1.5" marker-end="url(#arrowS)"/>
+
+          <rect x="60" y="150" width="200" height="54" rx="8" fill="#181D25" stroke="#D2A43C" stroke-opacity="0.55" stroke-width="1.2"/>
+          <text x="160" y="172" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="13" fill="#F4F0E4">Round of 16</text>
+          <text x="160" y="190" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8B93A6">8 Matches · Race to 3</text>
+          <text x="207" y="223" font-family="'IBM Plex Mono', monospace" font-size="9.5" fill="#8B93A6">8 Winners</text>
+          <line x1="160" y1="204" x2="160" y2="243" stroke="#D2A43C" stroke-width="1.5" marker-end="url(#arrowS)"/>
+
+          <rect x="60" y="246" width="200" height="54" rx="8" fill="#181D25" stroke="#D2A43C" stroke-opacity="0.55" stroke-width="1.2"/>
+          <text x="160" y="268" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="13" fill="#F4F0E4">Quarter Finals</text>
+          <text x="160" y="286" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8B93A6">4 Matches · Race to 5</text>
+          <text x="207" y="319" font-family="'IBM Plex Mono', monospace" font-size="9.5" fill="#8B93A6">4 Winners</text>
+          <line x1="160" y1="300" x2="160" y2="339" stroke="#D2A43C" stroke-width="1.5" marker-end="url(#arrowS)"/>
+
+          <rect x="60" y="342" width="200" height="54" rx="8" fill="#181D25" stroke="#D2A43C" stroke-opacity="0.55" stroke-width="1.2"/>
+          <text x="160" y="364" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="13" fill="#F4F0E4">Semi Finals</text>
+          <text x="160" y="382" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8B93A6">2 Matches · Race to 5</text>
+
+          <line x1="160" y1="396" x2="87" y2="429" stroke="#EFC868" stroke-width="1.5" marker-end="url(#arrowS)"/>
+          <line x1="160" y1="396" x2="233" y2="429" stroke="#8B93A6" stroke-width="1.5" marker-end="url(#arrowS3)"/>
+
+          <rect x="25" y="432" width="120" height="54" rx="8" fill="#0D3B29" stroke="#EFC868" stroke-width="1.6"/>
+          <text x="85" y="454" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="700" font-size="12.5" fill="#EFC868">Grand Final</text>
+          <text x="85" y="472" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="9.5" fill="#F4F0E4">Race to 7</text>
+
+          <rect x="175" y="432" width="120" height="54" rx="8" fill="#181D25" stroke="#8B93A6" stroke-opacity="0.6" stroke-width="1.2"/>
+          <text x="235" y="454" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="10.5" fill="#CBC7BA">3rd Place Match</text>
+          <text x="235" y="472" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="9.5" fill="#8B93A6">Race to 5</text>
+
+          <line x1="85" y1="486" x2="85" y2="513" stroke="#EFC868" stroke-width="1.5" marker-end="url(#arrowS)"/>
+          <line x1="235" y1="486" x2="235" y2="513" stroke="#8B93A6" stroke-width="1.5" marker-end="url(#arrowS3)"/>
+
+          <rect x="25" y="516" width="120" height="40" rx="20" fill="#0D3B29" stroke="#EFC868" stroke-width="1.4"/>
+          <text x="85" y="532" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" font-weight="600" letter-spacing="0.3" fill="#EFC868">CHAMPION &amp;</text>
+          <text x="85" y="544" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" font-weight="600" letter-spacing="0.3" fill="#EFC868">RUNNER-UP</text>
+
+          <rect x="175" y="516" width="120" height="40" rx="20" fill="#181D25" stroke="#8B93A6" stroke-width="1.2"/>
+          <text x="235" y="532" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" font-weight="600" letter-spacing="0.3" fill="#CBC7BA">3RD PLACE</text>
+          <text x="235" y="544" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" font-weight="600" letter-spacing="0.3" fill="#CBC7BA">WINNER</text>
+        </svg>
+      </div>
+      <div class="panel">
+        <div class="panel-label"><span class="dot" style="background:var(--gold-bright)"></span>Duo (Scotch Doubles) — 16 Teams</div>
+        <svg class="bracket-svg" viewBox="0 0 320 470" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block; margin-top:4px;">
+          <defs>
+            <marker id="arrowD" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#D2A43C"/>
+            </marker>
+            <marker id="arrowD3" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#8B93A6"/>
+            </marker>
+          </defs>
+
+          <rect x="50" y="8" width="220" height="30" rx="15" fill="#0D3B29" stroke="#D2A43C" stroke-width="1.2"/>
+          <text x="160" y="27.5" text-anchor="middle" font-family="Oswald, sans-serif" font-size="10.5" letter-spacing="1" fill="#F4F0E4">16 REGISTERED TEAMS</text>
+          <line x1="160" y1="38" x2="160" y2="51" stroke="#D2A43C" stroke-width="1.5" marker-end="url(#arrowD)"/>
+
+          <rect x="60" y="54" width="200" height="54" rx="8" fill="#181D25" stroke="#D2A43C" stroke-opacity="0.55" stroke-width="1.2"/>
+          <text x="160" y="76" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="13" fill="#F4F0E4">Round of 16</text>
+          <text x="160" y="94" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8B93A6">8 Matches · Race to 3</text>
+          <text x="207" y="127" font-family="'IBM Plex Mono', monospace" font-size="9.5" fill="#8B93A6">8 Winners</text>
+          <line x1="160" y1="108" x2="160" y2="147" stroke="#D2A43C" stroke-width="1.5" marker-end="url(#arrowD)"/>
+
+          <rect x="60" y="150" width="200" height="54" rx="8" fill="#181D25" stroke="#D2A43C" stroke-opacity="0.55" stroke-width="1.2"/>
+          <text x="160" y="172" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="13" fill="#F4F0E4">Quarter Finals</text>
+          <text x="160" y="190" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8B93A6">4 Matches · Race to 5</text>
+          <text x="207" y="223" font-family="'IBM Plex Mono', monospace" font-size="9.5" fill="#8B93A6">4 Winners</text>
+          <line x1="160" y1="204" x2="160" y2="243" stroke="#D2A43C" stroke-width="1.5" marker-end="url(#arrowD)"/>
+
+          <rect x="60" y="246" width="200" height="54" rx="8" fill="#181D25" stroke="#D2A43C" stroke-opacity="0.55" stroke-width="1.2"/>
+          <text x="160" y="268" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="13" fill="#F4F0E4">Semi Finals</text>
+          <text x="160" y="286" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="10" fill="#8B93A6">2 Matches · Race to 5</text>
+
+          <line x1="160" y1="300" x2="87" y2="333" stroke="#EFC868" stroke-width="1.5" marker-end="url(#arrowD)"/>
+          <line x1="160" y1="300" x2="233" y2="333" stroke="#8B93A6" stroke-width="1.5" marker-end="url(#arrowD3)"/>
+
+          <rect x="25" y="336" width="120" height="54" rx="8" fill="#0D3B29" stroke="#EFC868" stroke-width="1.6"/>
+          <text x="85" y="358" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="700" font-size="12.5" fill="#EFC868">Grand Final</text>
+          <text x="85" y="376" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="9.5" fill="#F4F0E4">Race to 7</text>
+
+          <rect x="175" y="336" width="120" height="54" rx="8" fill="#181D25" stroke="#8B93A6" stroke-opacity="0.6" stroke-width="1.2"/>
+          <text x="235" y="358" text-anchor="middle" font-family="Oswald, sans-serif" font-weight="600" font-size="10.5" fill="#CBC7BA">3rd Place Match</text>
+          <text x="235" y="376" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="9.5" fill="#8B93A6">Race to 5</text>
+
+          <line x1="85" y1="390" x2="85" y2="417" stroke="#EFC868" stroke-width="1.5" marker-end="url(#arrowD)"/>
+          <line x1="235" y1="390" x2="235" y2="417" stroke="#8B93A6" stroke-width="1.5" marker-end="url(#arrowD3)"/>
+
+          <rect x="25" y="420" width="120" height="40" rx="20" fill="#0D3B29" stroke="#EFC868" stroke-width="1.4"/>
+          <text x="85" y="436" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" font-weight="600" letter-spacing="0.3" fill="#EFC868">CHAMPION &amp;</text>
+          <text x="85" y="448" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" font-weight="600" letter-spacing="0.3" fill="#EFC868">RUNNER-UP</text>
+
+          <rect x="175" y="420" width="120" height="40" rx="20" fill="#181D25" stroke="#8B93A6" stroke-width="1.2"/>
+          <text x="235" y="436" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" font-weight="600" letter-spacing="0.3" fill="#CBC7BA">3RD PLACE</text>
+          <text x="235" y="448" text-anchor="middle" font-family="Oswald, sans-serif" font-size="9" font-weight="600" letter-spacing="0.3" fill="#CBC7BA">WINNER</text>
+        </svg>
+      </div>
+    </div>
+    <div class="felt-panel" style="margin-top:18px; display:flex; gap:14px; align-items:flex-start;">
+      <div class="panel-label" style="margin:0; white-space:nowrap;"><span class="dot"></span>Re-Entry Rules</div>
+      <p style="font-size:14px; color:var(--chalk-dim); line-height:1.6;">One official entry per player/team. Re-entry is permitted only during Round 1 (Round of 32 for Solo / Round of 16 for Duo). Once Round 1 concludes, registrations and re-entries are closed.</p>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">04 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 4. FEES & PRIZE POOL ============ -->
+<section id="s4">
+  <div class="content">
+    <div class="eyebrow">04 — Registration Fees & Prize Pool</div>
+    <h1 class="slide-title">Buy In,<br><em>Cash Out</em></h1>
+    <p class="subhead">What it costs to compete, and what's waiting on the rail for the top three.</p>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-label"><span class="dot"></span>Registration Fees</div>
+        <table class="spec">
+          <tr><td>Solo — Registration</td><td>LKR 2,000</td></tr>
+          <tr><td>Solo — Re-entry</td><td>LKR 1,000</td></tr>
+          <tr><td>Duo (per team) — Registration</td><td>LKR 3,000</td></tr>
+          <tr><td>Duo (per team) — Re-entry</td><td>LKR 2,000</td></tr>
+        </table>
+      </div>
+      <div class="felt-panel">
+        <div class="panel-label"><span class="dot"></span>Prize Pool</div>
+        <table class="spec">
+          <tr><td>Solo Champion</td><td>LKR 25,000</td></tr>
+          <tr><td>Solo Runner-up</td><td>LKR 15,000</td></tr>
+          <tr><td>Solo Third Place</td><td>LKR 7,500</td></tr>
+          <tr><td>Duo Champion</td><td>LKR 35,000</td></tr>
+          <tr><td>Duo Runner-up</td><td>LKR 25,000</td></tr>
+          <tr><td>Duo Third Place</td><td>LKR 10,000</td></tr>
+        </table>
+        <p style="margin-top:12px; font-size:12.5px; color:var(--gold-bright); font-family:var(--eyebrow); letter-spacing:0.05em;">+ 2 Hour Free Table Voucher for both Third Place categories</p>
+      </div>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">05 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 5. ESTIMATED REGISTRATION INCOME ============ -->
+<section id="s5">
+  <div class="content">
+    <div class="eyebrow">05 — Estimated Registration Income</div>
+    <h1 class="slide-title">What the<br><em>Door Brings In</em></h1>
+    <p class="subhead">Projected income from entries and Round 1 re-entries across both categories.</p>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-label"><span class="dot"></span>Solo</div>
+        <table class="spec">
+          <tr><td>32 players × LKR 2,000</td><td>64,000</td></tr>
+          <tr><td>Avg. re-entry (10 × 1,000)</td><td>10,000</td></tr>
+        </table>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:14px; border-top:1px solid var(--hair);">
+          <span style="font-family:var(--eyebrow); font-size:12px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase;">Total Solo Income</span>
+          <span style="font-family:var(--mono); font-size:22px; color:var(--gold-bright);">74,000</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-label"><span class="dot" style="background:var(--gold-bright)"></span>Duo</div>
+        <table class="spec">
+          <tr><td>16 teams × LKR 3,000</td><td>48,000</td></tr>
+          <tr><td>Avg. re-entry (6 × 2,000)</td><td>12,000</td></tr>
+        </table>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:14px; border-top:1px solid var(--hair);">
+          <span style="font-family:var(--eyebrow); font-size:12px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase;">Total Duo Income</span>
+          <span style="font-family:var(--mono); font-size:22px; color:var(--gold-bright);">60,000</span>
+        </div>
+      </div>
+    </div>
+    <div class="felt-panel" style="margin-top:18px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-family:var(--eyebrow); letter-spacing:0.16em; text-transform:uppercase; font-size:13px; color:var(--chalk-dim);">Total Expected Registration Income</span>
+      <span style="font-family:var(--mono); font-size:34px; color:var(--gold-bright);">LKR 134,000</span>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">06 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 6. OPERATIONAL BUDGET + FINANCIAL SUMMARY ============ -->
+<section id="s6">
+  <div class="content">
+    <div class="eyebrow">06 — Operational Budget & Financial Summary</div>
+    <h1 class="slide-title">Balancing<br><em>The Books</em></h1>
+    <p class="subhead">Running costs against total tournament cost, income, and the shortfall to plan for.</p>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-label"><span class="dot"></span>Operational Budget</div>
+        <table class="spec">
+          <tr><td>Certificates</td><td>8,500</td></tr>
+          <tr><td>Dummy Cheques</td><td>15,000</td></tr>
+          <tr><td>Printing (Fixtures, Rules, Numbers)</td><td>3,000</td></tr>
+          <tr><td>Social Media Marketing</td><td>25,000</td></tr>
+          <tr><td>Coverage</td><td>10,000</td></tr>
+        </table>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:14px; border-top:1px solid var(--hair);">
+          <span style="font-family:var(--eyebrow); font-size:12px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase;">Total Operational Expenses</span>
+          <span style="font-family:var(--mono); font-size:20px; color:var(--gold-bright);">LKR 61,500</span>
+        </div>
+      </div>
+      <div class="felt-panel">
+        <div class="panel-label"><span class="dot"></span>Financial Summary</div>
+        <table class="spec">
+          <tr><td>Solo Prize Pool</td><td>47,500</td></tr>
+          <tr><td>Duo Prize Pool</td><td>70,000</td></tr>
+          <tr><td>Total Prize Pool</td><td>117,500</td></tr>
+          <tr><td>Operational Expenses</td><td>61,500</td></tr>
+          <tr><td>Total Tournament Cost</td><td>179,000</td></tr>
+          <tr><td>Expected Registration Income</td><td>134,000</td></tr>
+        </table>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:16px; padding-top:14px; border-top:1px solid var(--gold-bright);">
+          <span style="font-family:var(--eyebrow); font-size:12px; letter-spacing:0.1em; color:var(--gold-bright); text-transform:uppercase;">Additional Budget Required</span>
+          <span style="font-family:var(--mono); font-size:24px; color:var(--gold-bright);">LKR 45,000</span>
+        </div>
+      </div>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">07 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 7. SPONSORSHIP / REVENUE OPPORTUNITIES ============ -->
+<section id="s7">
+  <div class="content">
+    <div class="eyebrow">07 — Revenue Opportunities</div>
+    <h1 class="slide-title">Racking Up<br><em>Sponsor Support</em></h1>
+    <p class="subhead">Ten revenue streams to help offset the LKR 45,000 additional budget requirement identified in the financial summary.</p>
+    <div class="grid2">
+      <div class="felt-panel">
+        <div class="panel-label"><span class="dot"></span>Sponsorship & Partnerships</div>
+        <ul class="clean">
+          <li>Title Sponsor.</li>
+          <li>Food & Beverage Partner.</li>
+          <li>Vendor Booth Rentals.</li>
+          <li>Individual Prize Sponsors.</li>
+          <li>Cue Shop / Sports Equipment Sponsor.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-label"><span class="dot" style="background:var(--gold-bright)"></span>On-Site Revenue</div>
+        <ul class="clean red">
+          <li>Tournament Merchandise.</li>
+          <li>Premium Player Package.</li>
+          <li>Paid Trick Shot Challenge.</li>
+          <li>Practice Table Sessions.</li>
+          <li>Raffle Ticket Sales.</li>
+        </ul>
+      </div>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">08 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 8. ENGAGEMENT ACTIVITIES ============ -->
+<section id="s8">
+  <div class="content">
+    <div class="eyebrow">08 — Event Engagement Activities</div>
+    <h1 class="slide-title">Keep Every Player<br><em>Talking</em></h1>
+    <p class="subhead">Three touchpoints that turn attendees into a database, a media campaign, and repeat guests.</p>
+    <div class="grid3">
+      <div class="panel">
+        <div class="panel-label"><span class="dot"></span>QR Code Registration</div>
+        <ul class="clean">
+          <li>Scan to register via Google Form.</li>
+          <li>Collects name, phone & WhatsApp.</li>
+          <li>Builds a database for future events.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-label"><span class="dot"></span>Social Media Challenge</div>
+        <ul class="clean">
+          <li>Upload tournament photo/video, tag Texas Billiard Club.</li>
+          <li>Best post wins 2 Hour Free Table Voucher.</li>
+          <li>Every participant becomes a promoter.</li>
+        </ul>
+      </div>
+      <div class="felt-panel">
+        <div class="panel-label"><span class="dot"></span>Lucky Draw</div>
+        <ul class="clean">
+          <li>Every participant gets one lucky draw entry.</li>
+          <li>Prizes: 2 Hour Free Table Voucher + Complimentary Soft Drinks.</li>
+          <li>Draw held before prize giving.</li>
+        </ul>
+      </div>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">09 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 9. TOURNAMENT TECHNOLOGY ============ -->
+<section id="s9">
+  <div class="content">
+    <div class="eyebrow">09 — Tournament Technology</div>
+    <h1 class="slide-title">Live Scores,<br><em>Zero Guesswork</em></h1>
+    <p class="subhead">A complimentary automated leaderboard platform, displayed courtside and accessible to every player via QR code.</p>
+    <div class="grid2">
+      <div class="panel">
+        <div class="panel-label"><span class="dot"></span>Platform Features</div>
+        <ul class="clean">
+          <li>Live tournament brackets & match fixtures.</li>
+          <li>Real-time match results & automatic bracket progression.</li>
+          <li>Current match status & upcoming match notifications.</li>
+          <li>Mobile-friendly access plus live TV / display screen integration.</li>
+        </ul>
+      </div>
+      <div class="felt-panel">
+        <div class="panel-label"><span class="dot"></span>Why It Matters</div>
+        <ul class="clean">
+          <li>Eliminates manual score tracking.</li>
+          <li>Players always know their next match.</li>
+          <li>Reduces organizer workload, improves spectator engagement.</li>
+          <li>Adds a professional, digital-first tournament experience.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="felt-panel" style="margin-top:18px; display:flex; justify-content:space-between; align-items:center;">
+      <span style="font-family:var(--eyebrow); letter-spacing:0.16em; text-transform:uppercase; font-size:13px; color:var(--chalk-dim);">Provided By IONIK Events</span>
+      <span style="font-family:var(--mono); font-size:22px; color:var(--gold-bright);">Complimentary — LKR 0</span>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">10 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 10. SCHEDULE ============ -->
+<section id="s10">
+  <div class="content">
+    <div class="eyebrow">10 — Event Schedule</div>
+    <h1 class="slide-title">14 Hours,<br><em>Rack to Trophy</em></h1>
+    <p class="subhead">From doors-open to closing photos — the full run of play for July 2026.</p>
+    <div class="grid2" style="gap:10px 40px;">
+      <div class="timeline">
+        <div class="trow"><span class="ttime">08:00 AM</span><span class="tevent">Registration Opens</span></div>
+        <div class="trow"><span class="ttime">08:45 AM</span><span class="tevent">Player Briefing & Rules</span></div>
+        <div class="trow"><span class="ttime">09:00 AM</span><span class="tevent">Solo Round of 32 Begins</span></div>
+        <div class="trow"><span class="ttime">12:30 PM</span><span class="tevent">Lunch Break (30 Minutes)</span></div>
+        <div class="trow"><span class="ttime">01:00 PM</span><span class="tevent">Solo Round of 16 & Quarter Finals</span></div>
+        <div class="trow"><span class="ttime">03:30 PM</span><span class="tevent">Duo Round of 16 Begins</span></div>
+        <div class="trow"><span class="ttime">05:30 PM</span><span class="tevent">Solo Semi Finals</span></div>
+      </div>
+      <div class="timeline">
+        <div class="trow"><span class="ttime">06:30 PM</span><span class="tevent">Duo Semi Finals</span></div>
+        <div class="trow"><span class="ttime">07:30 PM</span><span class="tevent">3rd Place Matches</span></div>
+        <div class="trow"><span class="ttime">08:15 PM</span><span class="tevent">Grand Finals</span></div>
+        <div class="trow"><span class="ttime">09:30 PM</span><span class="tevent">Lucky Draw</span></div>
+        <div class="trow"><span class="ttime">09:40 PM</span><span class="tevent">Social Media Challenge Winner</span></div>
+        <div class="trow"><span class="ttime">09:45 PM</span><span class="tevent">Prize Giving Ceremony</span></div>
+        <div class="trow"><span class="ttime">10:00 PM</span><span class="tevent">Closing Ceremony & Group Photos</span></div>
+      </div>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">11 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 11. EXPECTED OUTCOMES ============ -->
+<section id="s11">
+  <div class="content">
+    <div class="eyebrow">11 — Expected Outcomes</div>
+    <h1 class="slide-title">What the Parlour<br><em>Walks Away With</em></h1>
+    <p class="subhead">Beyond the trophies — the lasting value this day builds for the venue.</p>
+    <div class="grid2">
+      <div class="panel"><ul class="clean" style="gap:14px;">
+        <li>Increased awareness and exposure of Texas Billiard Club.</li>
+        <li>Establishment of The Lone Star Open as the club's flagship annual event.</li>
+        <li>Strong social media reach through participant-generated content.</li>
+        <li>Higher customer footfall and increased food & beverage sales.</li>
+        <li>Growth of a player database for future marketing.</li>
+      </ul></div>
+      <div class="felt-panel"><ul class="clean" style="gap:14px;">
+        <li>Improved customer retention through complimentary table vouchers.</li>
+        <li>Professional tournament management with a live automated leaderboard system.</li>
+        <li>Enhanced player and spectator experience through digital tournament tracking.</li>
+        <li>Strong foundation for recurring monthly, quarterly and annual championship events.</li>
+      </ul></div>
+    </div>
+    <footer class="pagefoot"><span>Texas Billiard Club · Lone Star Open 2026</span><span class="idx">12 / 13</span></footer>
+  </div>
+</section>
+
+<!-- ============ 12. CLOSING ============ -->
+<section id="s12" style="justify-content:center; align-items:center; text-align:center; background:radial-gradient(ellipse 800px 500px at 50% 50%, rgba(13,59,41,0.5), transparent 65%), var(--ink);">
+  <div class="content" style="align-items:center;">
+    <img class="crest" style="width:140px; height:auto; margin-bottom:20px;" src="Logo.png" alt="Texas Billiard Club Crest">
+    <h1 class="slide-title" style="font-size:clamp(30px,4.6vw,52px); letter-spacing:0.06em;">Join. Compete.<br>Connect. <em>Become a Champion.</em></h1>
+    <p class="subhead" style="margin:22px auto 0;">The Lone Star Open Championship 2026 — Texas Billiard Club</p>
+    <p style="font-family:var(--eyebrow); font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-top:14px;">Prepared &amp; Managed by IONIK Events · Tournament Management · Event Production · Digital Experience</p>
+  </div>
+</section>
+
+<script>
+  const balls = document.querySelectorAll('.railnav a');
+  const sections = document.querySelectorAll('section');
+  const progressFill = document.getElementById('progressFill');
+
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const id = entry.target.id;
+        balls.forEach(b=> b.classList.toggle('active', b.getAttribute('href') === '#'+id));
+      }
+    });
+  }, {threshold:0.5});
+  sections.forEach(s=> obs.observe(s));
+
+  const scroller = document.body;
+  document.addEventListener('scroll', ()=>{
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+    progressFill.style.height = pct + '%';
+  });
+</script>
+
+<style>
+  .timeline{ display:flex; flex-direction:column; }
+  .trow{ display:flex; align-items:baseline; gap:16px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .ttime{ font-family:var(--mono); font-size:13px; color:var(--gold-bright); min-width:78px; }
+  .tevent{ font-size:14.5px; color:var(--chalk-dim); }
+</style>
+
+</body>
+</html>
